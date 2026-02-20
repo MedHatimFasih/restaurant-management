@@ -1,0 +1,81 @@
+<nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link text-white active" href="{% url 'dashboard:home' %}">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'orders:order_list' %}">
+                    <i class="bi bi-cart3 me-2"></i>
+                    Commandes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'tables:table_list' %}">
+                    <i class="bi bi-grid-3x3-gap me-2"></i>
+                    Tables
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'menu:menu_list' %}">
+                    <i class="bi bi-journal-text me-2"></i>
+                    Menu
+                </a>
+            </li>
+            {% if user.can_manage_users %}
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'users:user_list' %}">
+                    <i class="bi bi-people me-2"></i>
+                    Utilisateurs
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+            <span>Rapports</span>
+        </h6>
+        <ul class="nav flex-column mb-2">
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'dashboard:sales_report' %}">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Ventes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'dashboard:menu_performance' %}">
+                    <i class="bi bi-bar-chart me-2"></i>
+                    Performance Menu
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<style>
+#sidebar {
+    min-height: calc(100vh - 56px);
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+#sidebar .nav-link {
+    font-weight: 500;
+    color: #fff;
+}
+
+#sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, .1);
+}
+
+#sidebar .nav-link.active {
+    color: #0d6efd;
+    background-color: rgba(13, 110, 253, .1);
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+}
+</style>
