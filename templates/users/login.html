@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Connexion - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+        <div class="col-md-5">
+            <div class="card shadow-lg animate-fade-in">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-shop text-primary" style="font-size: 4rem;"></i>
+                        <h2 class="mt-3 fw-bold">RestaurantPro</h2>
+                        <p class="text-muted small">Connectez-vous pour accéder à votre tableau de bord</p>
+                    </div>
+                    
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nom d'utilisateur</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-person"></i></span>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors }}</div>{% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Mot de passe</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-lock"></i></span>
+                                {{ form.password }}
+                            </div>
+                            {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors }}</div>{% endif %}
+                        </div>
+                        
+                        <div class="mb-4 d-flex justify-content-between align-items-center">
+                            <div class="form-check small">
+                                <input type="checkbox" class="form-check-input" id="rememberMe">
+                                <label class="form-check-label" for="rememberMe">Se souvenir de moi</label>
+                            </div>
+                            <a href="#" class="small text-decoration-none">Mot de passe oublié ?</a>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">Se connecter</button>
+                            <a href="{% url 'users:signup' %}" class="btn btn-outline-secondary">Créer un nouveau compte</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4 border-0 bg-white-50 shadow-sm animate-fade-in" style="animation-delay: 0.3s;">
+                <div class="card-body p-3 text-center small text-muted">
+                    <p class="mb-1 fw-bold">Comptes de test rapides :</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <span><strong>Admin:</strong> admin</span>
+                        <span><strong>Serveur:</strong> serveur</span>
+                        <span><strong>MDP:</strong> (le vôtre)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+body {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    background-attachment: fixed;
+}
+.card {
+    border-radius: 1.25rem;
+}
+</style>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Menu - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Gestion du Menu</h1>
+        {% if user.can_manage_menu %}
+        <div class="d-none d-sm-inline-block">
+            <a href="{% url 'menu:category_create' %}" class="btn btn-sm btn-outline-primary shadow-sm me-2">
+                <i class="bi bi-folder-plus me-1"></i>Nouvelle Catégorie
+            </a>
+            <a href="{% url 'menu:menu_create' %}" class="btn btn-sm btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i>Ajouter un Plat
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Rechercher</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control bg-light border-0" placeholder="Nom ou description..." value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Catégorie</label>
+                    <select name="category" class="form-select bg-light border-0">
+                        <option value="">Toutes les catégories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Disponibilité</label>
+                    <select name="availability" class="form-select bg-light border-0">
+                        <option value="">Tous les états</option>
+                        <option value="available" {% if request.GET.availability == 'available' %}selected{% endif %}>Disponible</option>
+                        <option value="unavailable" {% if request.GET.availability == 'unavailable' %}selected{% endif %}>Indisponible</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary">Filtrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Menu Grid -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        {% for item in menu_items %}
+        <div class="col">
+            <div class="card h-100 menu-item-card shadow-sm border-0">
+                <div class="position-relative">
+                    {% if item.image %}
+                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}">
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="bi bi-image text-gray-300" style="font-size: 4rem;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="position-absolute top-0 end-0 p-2">
+                        <span class="badge {% if item.is_available %}bg-success{% else %}bg-danger{% endif %} shadow-sm">
+                            {% if item.is_available %}Disponible{% else %}Indisponible{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0 fw-bold">{{ item.name }}</h5>
+                        <span class="text-primary fw-bold">{{ item.price }} MAD</span>
+                    </div>
+                    <p class="card-text text-muted small mb-2">{{ item.description|truncatechars:80 }}</p>
+                    <div class="d-flex flex-wrap gap-1 mb-3">
+                        <span class="badge bg-light text-dark border small">{{ item.category.name }}</span>
+                        {% if item.is_vegetarian %}<span class="badge bg-success-subtle text-success border-success-subtle small"><i class="bi bi-leaf"></i> Veggie</span>{% endif %}
+                        {% if item.is_spicy %}<span class="badge bg-danger-subtle text-danger border-danger-subtle small"><i class="bi bi-fire"></i> Épicé</span>{% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center pb-3">
+                    <div class="btn-group">
+                        <a href="{% url 'menu:menu_detail' item.slug %}" class="btn btn-sm btn-outline-primary" title="Voir détails">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if user.can_manage_menu %}
+                        <a href="{% url 'menu:menu_update' item.slug %}" class="btn btn-sm btn-outline-secondary" title="Modifier">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% if user.can_manage_menu %}
+                    <button class="btn btn-sm {% if item.is_available %}btn-outline-danger{% else %}btn-outline-success{% endif %} toggle-avail" 
+                            data-url="{% url 'menu:toggle_availability' item.slug %}">
+                        {% if item.is_available %}Désactiver{% else %}Activer{% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="mb-3">
+                <i class="bi bi-search text-gray-300" style="font-size: 5rem;"></i>
+            </div>
+            <h4 class="text-gray-800">Aucun plat trouvé</h4>
+            <p class="text-muted">Essayez de modifier vos filtres ou ajoutez de nouveaux plats.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Précédent</a></li>
+            {% endif %}
+            
+            {% for i in paginator.page_range %}
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ i }}</a>
+            </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Suivant</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<script>
+    document.querySelectorAll('.toggle-avail').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

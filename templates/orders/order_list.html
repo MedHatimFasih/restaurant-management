@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Commandes - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Gestion des Commandes</h1>
+        <div class="d-none d-sm-inline-block">
+            <a href="{% url 'orders:order_create' %}" class="btn btn-sm btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nouvelle Commande
+            </a>
+            <a href="{% url 'orders:kitchen_display' %}" class="btn btn-sm btn-outline-info shadow-sm ms-2">
+                <i class="bi bi-display me-1"></i>Écran Cuisine
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">En attente</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_orders }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">En préparation</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ preparing_orders }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Prêtes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ ready_orders }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Commandes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_orders }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders List Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Liste des Commandes</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th># Numéro</th>
+                            <th>Table</th>
+                            <th>Serveur</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td><strong>{{ order.order_number }}</strong></td>
+                            <td>{{ order.table.number|default:"-" }}</td>
+                            <td>{{ order.waiter.get_full_name|default:order.waiter.username }}</td>
+                            <td>{{ order.get_order_type_display }}</td>
+                            <td>
+                                <span class="badge rounded-pill bg-{% if order.status == 'pending' %}warning{% elif order.status == 'preparing' %}info{% elif order.status == 'ready' %}primary{% elif order.status == 'served' %}success{% else %}danger{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="fw-bold">{{ order.total }} MAD</td>
+                            <td>{{ order.created_at|date:"d/m H:i" }}</td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-sm btn-outline-primary" title="Voir détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if order.can_be_modified %}
+                                    <a href="{% url 'orders:order_add_items' order.pk %}" class="btn btn-sm btn-outline-success" title="Ajouter articles">
+                                        <i class="bi bi-cart-plus"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="8" class="text-center py-5">Aucune commande trouvée.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a></li>
+                    {% endif %}
+                    {% for i in paginator.page_range %}<li class="page-item {% if page_obj.number == i %}active{% endif %}"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>{% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

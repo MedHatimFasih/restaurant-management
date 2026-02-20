@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="container-fluid animate-fade-in">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Tableau de Bord</h1>
+        <div class="d-none d-sm-inline-block">
+            <a href="{% url 'dashboard:export_sales_csv' %}" class="btn btn-sm btn-primary shadow-sm">
+                <i class="bi bi-download fa-sm text-white-50 me-2"></i>Générer Rapport
+            </a>
+            <span class="ms-2 text-muted"><i class="bi bi-calendar3 me-1"></i>{{ now|date:"d F Y" }}</span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Revenue Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-primary h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Revenus (Aujourd'hui)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_revenue }} MAD</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-dollar fa-2x text-gray-300" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-success h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Commandes (Aujourd'hui)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_orders_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-cart-check fa-2x text-gray-300" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-info h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Occupation Tables</div>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{ occupation_rate }}%</div>
+                                </div>
+                                <div class="col ms-3">
+                                    <div class="progress progress-sm mr-2" style="height: 8px;">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ occupation_rate }}%" aria-valuenow="{{ occupation_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-grid-3x3-gap fa-2x text-gray-300" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-warning h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Alertes Actives</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ unread_alerts.count|default:"0" }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fa-2x text-gray-300" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Revenue Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Aperçu des Revenus (7 derniers jours)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 300px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Center -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Actions Rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'orders:order_create' %}" class="btn btn-primary d-flex align-items-center justify-content-center p-3">
+                            <i class="bi bi-plus-circle-fill me-2 fs-4"></i> Nouvelle Commande
+                        </a>
+                        <a href="{% url 'tables:floor_plan' %}" class="btn btn-outline-info d-flex align-items-center justify-content-center p-3">
+                            <i class="bi bi-map-fill me-2 fs-4"></i> Plan de Salle
+                        </a>
+                        <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center p-3">
+                            <i class="bi bi-book-half me-2 fs-4"></i> Consulter le Menu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Orders -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Commandes Récentes</h6>
+                    <a href="{% url 'orders:order_list' %}" class="btn btn-sm btn-link">Voir tout</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Table</th>
+                                    <th>Heure</th>
+                                    <th>Total</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td><strong>{{ order.order_number }}</strong></td>
+                                    <td>{{ order.table.number|default:"-" }}</td>
+                                    <td>{{ order.created_at|date:"H:i" }}</td>
+                                    <td>{{ order.total }} MAD</td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-{% if order.status == 'served' %}success{% elif order.status == 'pending' %}warning{% else %}info{% endif %}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center py-4">Aucune commande récente.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Selling Items -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Plats les plus vendus (Aujourd'hui)</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Plat</th>
+                                    <th class="text-center">Quantité</th>
+                                    <th class="text-end">Ventes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in top_items_today %}
+                                <tr>
+                                    <td>{{ item.menu_item__name }}</td>
+                                    <td class="text-center"><span class="badge bg-primary rounded-pill">{{ item.total_quantity }}</span></td>
+                                    <td class="text-end fw-bold">{{ item.total_revenue }} MAD</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center py-4">Aucune vente enregistrée aujourd'hui.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Revenus (MAD)',
+                data: {{ chart_data|safe }},
+                fill: true,
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                borderColor: 'rgba(78, 115, 223, 1)',
+                pointRadius: 3,
+                pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                pointBorderColor: 'rgba(78, 115, 223, 1)',
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                tension: 0.3
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
+            scales: {
+                x: { grid: { display: false, drawBorder: false } },
+                y: {
+                    ticks: { maxTicksLimit: 5, padding: 10 },
+                    grid: { color: "rgb(234, 236, 244)", zeroLineColor: "rgb(234, 236, 244)", drawBorder: false, borderDash: [2], zeroLineBorderDash: [2] }
+                }
+            },
+            plugins: { legend: { display: false }, tooltip: { backgroundColor: "rgb(255,255,255)", bodyColor: "#858796", titleColor: '#6e707e', borderColor: '#dddfeb', borderWidth: 1, xPadding: 15, yPadding: 15, displayColors: false, intersect: false, mode: 'index', caretPadding: 10 } }
+        }
+    });
+</script>
+{% endblock %}
